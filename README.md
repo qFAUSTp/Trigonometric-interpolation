@@ -14,6 +14,8 @@ Data that you put must satisfy the following condition:
 
 ![alt text](https://cdn.discordapp.com/attachments/812333574467354635/812747992598839326/CodeCogsEqn_1.png)
 
+And the amount of data must be an even number.
+
 As result, program will calculate all needed coefficient, that can be used in upper polynomial.
 
 Here is some example:
