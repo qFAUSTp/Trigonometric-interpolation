@@ -1,145 +1,108 @@
-#include "stdafx.h"
 #include "iostream"
-#include "cmath"
 #include "fstream"
-#include "ctime"
-//------------------------------------------------------------------------------------------------
+#include "vector"
+#include "cmath"
+
+#define X 0
+#define Y 1
+
+#define PI 3.14159265358979323846
+
 using namespace std;
-//------------------------------------------------------------------------------------------------
-const double pi=3.14159265;
-//------------------------------------------------------------------------------------------------
-void input(double*,double*,int*);
-void input_y(double*,double*,double*,double,double,int);
-double a_0(double*,int);
-double a_m(double*,int);
-double a_k(double*,int,int);
-double b_k(double*,int,int);
-void T_m(double*,double*,double*,double*,double*,double,double,int);
-void stream_output(double*,double*,double*,double*,int);
-//------------------------------------------------------------------------------------------------
+
+void LoadData(vector<double>[]);
+void Normalize(vector<double>[]);
+void Calculate(vector<double>[], double*, vector<double>, vector<double>, double*);
+
 void main()
 {
-	srand(time(0));
-	int m,N;
-	double *y,*x,*T,*t,*t_int,a,b;
-	input(&a,&b,&m);
-	N=2*m;
-	t_int=new double[60];
-	T=new double[60];
-	t=new double[N];
-	y=new double[N];
-	x=new double[60];
-	input_y(t_int,y,t,a,b,N);
-	T_m(t_int,T,x,t,y,a,b,m);
-	stream_output(t_int,T,t,y,2*m);
-	cout<<"Done!"<<endl;
+    vector<double> data[2];
+    LoadData(data);
+
+    int m = data[X].size();
+
+    double a_0, a_m;
+    vector<double> a_k, b_k;
+
+    Normalize(data);
+    Calculate(data, &a_0, a_k, b_k, &a_m);
 }
 
-void input(double *a,double *b,int *m)
+void LoadData(vector<double> data[])
 {
-	ifstream f("Experimental_data.txt");
-	f>>*a;
-	f>>*b;
-	f>>*m;
-	f.close();
+    ifstream f("test_data.txt");
+    if (f.good())
+    {
+        int x = 0, y = 0;
+        cout << "Loading data from .txt" << endl;
+        while(f >> x >> y)
+        {
+            data[X].push_back(x);
+            data[Y].push_back(y);
+        }
+        cout << "All data is loaded..." << endl;
+        //Check x2-x1 = x3-x2 = ... 
+    } else 
+        cout << "Error: Data file does not exist!" << endl;
 }
 
-void input_y(double *t_int,double *y,double *t,double a,double b,int N)
+void Normalize(vector<double> data[])
 {
-	double dt=(b-a)/N,x=a,dintx;
-	for(int i=1;i<=N;i++)
-	{
-		t[i]=x;
-		y[i]=rand()%10;
-		x+=dt;
-	}
-	dintx=(b-a)/60,x=a;
-	for(int i=1;i<=60;i++)
-	{	
-		t_int[i]=x;
-		x+=dintx;
-	}
+    if(data[X][data[X].size() - 1] > 2*PI)
+    {
+        cout << "Normalizing x to 2pi..." << endl;
+        double stretch = data[X][data[X].size() - 1] / (2 * PI);
+        for(int i = 0; i < data[X].size(); i ++)
+        {
+            cout << data[X][i] << " " << data[Y][i] << " | ";
+            data[X][i] /= stretch;
+            cout << data[X][i] << " " << data[Y][i] << endl;
+        }
+        cout << "---------------" << endl;
+    }
+    else
+        cout << "No need to normalize x." << endl;
 }
 
-void stream_output(double *t_int,double *T,double *t,double *y, int N)
+void Calculate(vector<double> data[], double *a_0, vector<double> a_k, vector<double> b_k, double *a_m)
 {
-	ofstream f;
-	f.open("Interpolation.txt");
-	for(int i=1;i<=N;i++)
-	{
-		f<<t[i];
-		f<<' ';
-	}
-	for(int i=1;i<=N;i++)
-	{
-		f<<y[i];
-		f<<' ';
-	}
-	for(int i=1;i<=60;i++)
-	{
-		f<<t_int[i];
-		f<<' ';
-	}
-	for(int i=1;i<=60;i++)
-	{
-		f<<T[i];
-		f<<' ';
-	}
-	f.close();
-}
+    int n = data[X].size();
 
-double a_0(double *y,int N)
-{
-	double a0=0;
-	for(int i=1;i<=N;i++)
-		a0+=y[i];
-	a0*=2;
-	a0/=N;
-	return a0;
-}
+    //Calculating a_0
+    *a_0 = 0;
+    for(int i = 0; i < n; i++)
+        *a_0 += data[Y][i];
+    *a_0 = *a_0 * 2 / n;  
+    cout << "a_0: " << *a_0 << endl;
 
-double a_m(double *y,int N)
-{
-	double am=0;
-	for(int i=1;i<=N;i++)
-		am+=(pow(-1,i-1)*y[i]);
-	am*=2;
-	am/=N;
-	return am;
-}
+    //Calculating a_k
+    cout << "a_k: ";
+    for(int k = 0; k < n/2 - 1; k++)
+    {
+        a_k.push_back(0);
+        for(int i = 0; i < n; i++)
+            a_k[k] += data[Y][i] * cos(2*PI*(k+1)*i/n);
+        a_k[k] = a_k[k] * 2 / n;
+        cout << a_k[k] << " ";
+    }
+    cout << endl;
 
-double a_k(double *y,int k,int N)
-{
-	double ak=0;
-	for(int i=1;i<=N;i++)
-		ak+=(cos(2*pi*k*(i-1)/N)*y[i]);
-	ak*=2;
-	ak/=N;
-	return ak;
-}
-
-double b_k(double *y,int k,int N)
-{
-	double bk=0;
-	for(int i=1;i<=N;i++)
-		bk+=(sin(2*pi*k*(i-1)/N)*y[i]);
-	bk*=2;
-	bk/=N;
-	return bk;
-}
-
-void T_m(double *t_int,double *T,double *x,double *t,double *y,double a,double b,int m)
-{
-	int N=2*m;
-	double s;
-	x=new double[60];
-	for(int i=1;i<=60;i++)
-		x[i]=2*pi*(t_int[i]-a)/(b-a);
-	for(int i=1;i<=60;i++)
-	{
-	s=0;
-	for(int k=1;k<=m-1;k++)
-		s+=(a_k(y,k,N)*cos(k*x[i])+b_k(y,k,N)*sin(k*x[i]));
-	T[i]=a_0(y,N)/2+s+a_m(y,N)*cos(m*x[i])/2;
-	}
+    //Calculating b_k
+    cout << "b_k: ";
+    for(int k = 0; k < n/2 - 1; k++)
+    {
+        b_k.push_back(0);
+        for(int i = 0; i < n; i++)
+            b_k[k] += data[Y][i] * sin(2*PI*(k+1)*i/n);
+        b_k[k] = b_k[k] * 2 / n;
+        cout << b_k[k] << " ";
+    }
+    cout << endl;
+    
+    //Calculating a_m
+    *a_m = 0;
+	for(int i = 0; i < n; i++)
+		*a_m += (pow(-1,i)*data[Y][i]);
+    *a_m = *a_m * 2 / n;
+    cout << "a_m: " << *a_m << endl;
 }
