@@ -30,10 +30,10 @@ void main()
 
 void LoadData(vector<double> data[])
 {
-    ifstream f("test_data.txt");
+    ifstream f("input_data.txt");
     if (f.good())
     {
-        int x = 0, y = 0;
+        double x = 0, y = 0;
         cout << "Loading data from .txt" << endl;
         while(f >> x >> y)
         {
@@ -59,8 +59,7 @@ void Normalize(vector<double> data[])
             cout << data[X][i] << " " << data[Y][i] << endl;
         }
         cout << "---------------" << endl;
-    }
-    else
+    } else
         cout << "No need to normalize x." << endl;
 }
 
